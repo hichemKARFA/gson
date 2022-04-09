@@ -737,12 +737,7 @@ public final class Gson {
   @SuppressWarnings("unchecked")
   public void toJson(Object src, Type typeOfSrc, JsonWriter writer) throws JsonIOException {
     TypeAdapter<?> adapter = getAdapter(TypeToken.get(typeOfSrc));
-    boolean oldLenient = writer.isLenient();
-    writer.setLenient(true);
-    boolean oldHtmlSafe = writer.isHtmlSafe();
-    writer.setHtmlSafe(htmlSafe);
-    boolean oldSerializeNulls = writer.getSerializeNulls();
-    writer.setSerializeNulls(serializeNulls);
+    boolean[] olds = getOldsValues(writer);
     try {
       ((TypeAdapter<Object>) adapter).write(writer, src);
     } catch (IOException e) {
@@ -752,9 +747,9 @@ public final class Gson {
       error.initCause(e);
       throw error;
     } finally {
-      writer.setLenient(oldLenient);
-      writer.setHtmlSafe(oldHtmlSafe);
-      writer.setSerializeNulls(oldSerializeNulls);
+        writer.setLenient(olds[0]); //oldLenient
+        writer.setHtmlSafe(olds[1]); //oldHtmlSafe
+        writer.setSerializeNulls(olds[2]); //oldSerializeNulls
     }
   }
 
@@ -833,12 +828,8 @@ public final class Gson {
    * @throws JsonIOException if there was a problem writing to the writer
    */
   public void toJson(JsonElement jsonElement, JsonWriter writer) throws JsonIOException {
-    boolean oldLenient = writer.isLenient();
-    writer.setLenient(true);
-    boolean oldHtmlSafe = writer.isHtmlSafe();
-    writer.setHtmlSafe(htmlSafe);
-    boolean oldSerializeNulls = writer.getSerializeNulls();
-    writer.setSerializeNulls(serializeNulls);
+	  
+	boolean[] olds = getOldsValues(writer);
     try {
       Streams.write(jsonElement, writer);
     } catch (IOException e) {
@@ -848,10 +839,25 @@ public final class Gson {
       error.initCause(e);
       throw error;
     } finally {
-      writer.setLenient(oldLenient);
-      writer.setHtmlSafe(oldHtmlSafe);
-      writer.setSerializeNulls(oldSerializeNulls);
+    	writer.setLenient(olds[0]); //oldLenient
+        writer.setHtmlSafe(olds[1]); //oldHtmlSafe
+        writer.setSerializeNulls(olds[2]); //oldSerializeNulls
     }
+  }
+  
+  
+  
+  /**
+   * Return booleans values of oldLenient, oldHtmlSafe, and oldSerializeNulls in an array
+   */
+  private boolean[] getOldsValues(JsonWriter writer) {
+	  boolean oldLenient = writer.isLenient();
+	  writer.setLenient(true);
+	  boolean oldHtmlSafe = writer.isHtmlSafe();
+	  writer.setHtmlSafe(htmlSafe);
+	  boolean oldSerializeNulls = writer.getSerializeNulls();
+	  writer.setSerializeNulls(serializeNulls);
+	  return new boolean[] { oldLenient, oldHtmlSafe, oldSerializeNulls };
   }
 
   /**
